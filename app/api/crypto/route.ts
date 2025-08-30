@@ -1,4 +1,4 @@
-import { NextResponse } from 'next/server';
+import { NextResponse } from "next/server"
 
 export async function GET() {
   // Fetch data from the CoinMarketCap API
@@ -6,5 +6,5 @@ export async function GET() {
 
   const data = {}
 
-  return NextResponse.json(data);
+  return NextResponse.json(data)
 }
