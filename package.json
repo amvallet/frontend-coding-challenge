@@ -12,6 +12,8 @@
     "format:write": "prettier --config ./.prettierrc.json --write ."
   },
   "dependencies": {
+    "@tanstack/react-query": "^5.85.6",
+    "@tanstack/react-query-devtools": "^5.85.6",
     "next": "15.4.4",
     "react": "19.1.0",
     "react-dom": "19.1.0"
