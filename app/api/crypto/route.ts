@@ -13,6 +13,11 @@ interface Crypto {
   }
 }
 
+type BuyPayload = {
+  amountUSD: number
+  symbol: string
+}
+
 export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url)
@@ -47,6 +52,32 @@ export async function GET(request: Request) {
         details: error instanceof Error ? error.message : error,
       },
       { status: 500 },
+    )
+  }
+}
+
+export async function POST(request: Request) {
+  try {
+    const body = (await request.json()) as Partial<BuyPayload>
+    const amount = Number(body.amountUSD)
+    const symbol = String(body.symbol ?? "")
+
+    if (!symbol) {
+      return NextResponse.json({ error: "Missing symbol" }, { status: 400 })
+    }
+    if (!Number.isFinite(amount) || amount <= 0 || amount > 5000) {
+      return NextResponse.json({ error: "Amount must be between 0 and 5000" }, { status: 400 })
+    }
+
+    const payload: BuyPayload = { amountUSD: Math.round(amount * 100) / 100, symbol }
+    return NextResponse.json(payload, { status: 200 })
+  } catch (error) {
+    return NextResponse.json(
+      {
+        error: "Invalid request",
+        details: error instanceof Error ? error.message : error,
+      },
+      { status: 400 },
     )
   }
 }

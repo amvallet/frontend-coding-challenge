@@ -3,6 +3,7 @@
 import { Box, Heading } from "@chakra-ui/react"
 import RefreshTimer from "../components/refresh-timer"
 import CryptoList from "../components/crypto-list"
+import BuyForm from "../components/buy-form"
 
 export default function Home() {
   return (
@@ -13,6 +14,7 @@ export default function Home() {
         </Heading>
         <RefreshTimer />
       </Box>
+      <BuyForm />
       <CryptoList />
     </>
   )
