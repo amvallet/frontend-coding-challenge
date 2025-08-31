@@ -2,12 +2,26 @@ import { NextResponse } from "next/server"
 
 const publicAPIKey = process.env.COINMARKET_API_KEY
 
+interface Crypto {
+  id: number
+  name: string
+  symbol: string
+  quote?: {
+    USD?: {
+      price?: number
+    }
+  }
+}
+
 export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url)
     const limit = searchParams.get("limit") || "10"
 
-    const url = `https://pro-api.coinmarketcap.com/v1/cryptocurrency/listings/latest?limit=${limit}`
+    const params = new URLSearchParams()
+    params.set("limit", limit)
+
+    const url = `https://pro-api.coinmarketcap.com/v1/cryptocurrency/listings/latest?${params.toString()}`
 
     const response = await fetch(url, {
       headers: {
@@ -22,7 +36,10 @@ export async function GET(request: Request) {
     }
 
     const data = await response.json()
-    return NextResponse.json(data)
+    const sortedData: Crypto[] = Array.isArray(data?.data)
+      ? [...data.data].sort((a: Crypto, b: Crypto) => a.name.localeCompare(b.name))
+      : []
+    return NextResponse.json({ data: sortedData })
   } catch (error) {
     return NextResponse.json(
       {

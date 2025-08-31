@@ -2,12 +2,26 @@
 
 import { keepPreviousData, useQuery } from "@tanstack/react-query"
 
-export type CryptoListingsResponse = unknown
+export type CryptoListingsResponse = {
+  data: Array<{
+    id: number
+    name: string
+    symbol: string
+    quote?: {
+      USD?: {
+        price?: number
+      }
+    }
+  }>
+}
 
 async function fetchCryptoListings(
   limit: number,
 ): Promise<CryptoListingsResponse> {
-  const res = await fetch(`/api/crypto?limit=${encodeURIComponent(limit)}`, {
+  const params = new URLSearchParams()
+  params.set("limit", String(limit))
+
+  const res = await fetch(`/api/crypto?${params.toString()}`, {
     cache: "no-store",
   })
   if (!res.ok) {
@@ -17,8 +31,9 @@ async function fetchCryptoListings(
   return res.json()
 }
 
-export function useCryptoListings(limit = 10) {
-  return useQuery({
+export function useCryptoListings(params: { limit?: number } = {}) {
+  const { limit = 10 } = params
+  return useQuery<CryptoListingsResponse>({
     queryKey: ["crypto", "listings", { limit }],
     queryFn: () => fetchCryptoListings(limit),
     placeholderData: keepPreviousData,
