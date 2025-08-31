@@ -17,7 +17,7 @@ const CryptoList = () => {
   if (isLoading) {
     const skeletonCount = 10
     return (
-      <Box px={{ base: 4, md: 8 }} py={6} className="bg-background text-foreground">
+      <Box px={{ base: 4, md: 8 }} py={6} className="bg-white text-gray-900 dark:bg-neutral-900 dark:text-gray-100">
         <SimpleGrid columns={{ base: 1, md: 2 }} gap={6} width="full">
           {Array.from({ length: skeletonCount }).map((_, i) => (
             <Card.Root
@@ -72,7 +72,7 @@ const CryptoList = () => {
                 <Heading size="sm" mb={1} className="text-gray-900 dark:text-gray-100">
                   {crypto.name} ({crypto.symbol})
                 </Heading>
-                <Text className="text-gray-600 dark:text-gray-300">Price: {formatUSD(price)}</Text>
+                <Text className="text-gray-700 dark:text-gray-300">Price: {formatUSD(price)}</Text>
               </Card.Body>
             </Card.Root>
           )
