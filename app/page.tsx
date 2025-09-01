@@ -1,7 +1,7 @@
 "use client"
 
 import { Box, Heading } from "@chakra-ui/react"
-// import RefreshTimer from "../components/refresh-timer"
+import RefreshTimer from "../components/refresh-timer"
 import CryptoList from "../components/crypto-list"
 import BuyForm from "../components/buy-form"
 import SettingsPopover from "../components/settings-popover"
@@ -16,7 +16,7 @@ export default function Home() {
         <Heading as="h1" size="lg" textAlign="center" mb={1} color="var(--foreground)">
           Crypto prices
         </Heading>
-        {/* <RefreshTimer align="center" /> */}
+        <RefreshTimer align="center" />
       </Box>
       <BuyForm />
       <CryptoList />
