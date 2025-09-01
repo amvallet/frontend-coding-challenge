@@ -1,5 +1,7 @@
-import { Alert, Box, Card, Heading, SimpleGrid, Skeleton, Text, Table } from "@chakra-ui/react"
-import { useCryptoListings } from "../hooks/useCryptoListings"
+import { Alert, Box, Card, Heading, SimpleGrid, Skeleton, Text, Table, Input, InputGroup, SegmentGroup, HStack } from "@chakra-ui/react"
+import { useMemo, useState } from "react"
+import { LuSearch } from "react-icons/lu"
+import { useCryptoListings, type CryptoListingsResponse } from "../hooks/useCryptoListings"
 import { useViewStyle } from "../hooks/useViewStyle"
 
 function formatUSD(value?: number) {
@@ -12,29 +14,111 @@ function formatUSD(value?: number) {
   }).format(value)
 }
 
+type Crypto = CryptoListingsResponse["data"][number]
+
+function escapeRegExp(str: string) {
+  return str.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")
+}
+
+function makeFuzzyRegex(input: string) {
+  const cleaned = escapeRegExp(input.trim())
+  const pattern = cleaned.split("").join(".*")
+  return new RegExp(pattern, "i")
+}
+
 const CryptoList = () => {
   const { data, isLoading, error } = useCryptoListings({ limit: 10 })
   const { viewStyle } = useViewStyle()
+
+  type SortKey = "name" | "symbol" | "price"
+  const [query, setQuery] = useState("")
+  const [sortKey, setSortKey] = useState<SortKey>("name")
+
+  const items: Crypto[] = useMemo(() => (data?.data ?? []) as Crypto[], [data])
+
+  const displayItems = useMemo<Crypto[]>(() => {
+    const q = query.trim()
+    let filtered = items
+    if (q.length > 0) {
+      const re = makeFuzzyRegex(q)
+      filtered = items.filter((c) => re.test(c?.name ?? "") || re.test(c?.symbol ?? ""))
+    }
+    const sorted = [...filtered].sort((a, b) => {
+      switch (sortKey) {
+        case "name":
+          return String(a?.name ?? "").localeCompare(String(b?.name ?? ""))
+        case "symbol":
+          return String(a?.symbol ?? "").localeCompare(String(b?.symbol ?? ""))
+        case "price": {
+          const pa = Number(a?.quote?.USD?.price ?? 0)
+          const pb = Number(b?.quote?.USD?.price ?? 0)
+          return pb-pa
+        }
+        default:
+          return 0
+      }
+    })
+    return sorted
+  }, [items, query, sortKey])
+
+  const Controls = (
+    <HStack
+      gap={3}
+      align="center"
+      maxW="720px"
+      mx="auto"
+      mb={4}
+      bg="transparent"
+      color="var(--foreground)"
+    >
+      <Box flex="1">
+        <InputGroup startElement={<LuSearch />}> 
+          <Input
+            size="sm"
+            placeholder="Search by name or symbol"
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            bg="var(--background)"
+            color="var(--foreground)"
+            borderColor="var(--border)"
+            _placeholder={{ color: "color-mix(in srgb, var(--foreground) 55%, transparent)" }}
+          />
+        </InputGroup>
+      </Box>
+      <SegmentGroup.Root
+        size="sm"
+        value={sortKey}
+        onValueChange={({ value }) => setSortKey((value as SortKey) ?? "name")}
+        bg="var(--background)"
+        color="var(--foreground)"
+        borderWidth="1px"
+        borderColor="var(--border)"
+        rounded="md"
+      >
+        <SegmentGroup.Item value="name" px="3" py="1.5" color="var(--foreground)" _checked={{ color: "var(--background)", bg: "var(--foreground)" }}>
+          <SegmentGroup.ItemText color="currentColor">Name</SegmentGroup.ItemText>
+          <SegmentGroup.ItemHiddenInput />
+        </SegmentGroup.Item>
+        <SegmentGroup.Item value="symbol" px="3" py="1.5" color="var(--foreground)" _checked={{ color: "var(--background)", bg: "var(--foreground)" }}>
+          <SegmentGroup.ItemText color="currentColor">Symbol</SegmentGroup.ItemText>
+          <SegmentGroup.ItemHiddenInput />
+        </SegmentGroup.Item>
+        <SegmentGroup.Item value="price" px="3" py="1.5" color="var(--foreground)" _checked={{ color: "var(--background)", bg: "var(--foreground)" }}>
+          <SegmentGroup.ItemText color="currentColor">Price</SegmentGroup.ItemText>
+          <SegmentGroup.ItemHiddenInput />
+        </SegmentGroup.Item>
+      </SegmentGroup.Root>
+    </HStack>
+  )
 
   if (isLoading) {
     const skeletonCount = 10
     return (
       <Box px={{ base: 4, md: 8 }} py={6} bg="var(--background)" color="var(--foreground)">
+        {Controls}
         {viewStyle === "list" ? (
           <Box borderWidth="1px" borderColor="var(--border)" rounded="lg" boxShadow="sm" overflow="hidden" maxW="720px" mx="auto">
-            <Table.Root
-              size="sm"
-              bg="var(--background)"
-              color="var(--foreground)"
-              borderColor="var(--border)"
-              sx={{
-                "thead, tbody, tr, th, td": {
-                  backgroundColor: "var(--background)",
-                  color: "var(--foreground)",
-                  borderColor: "var(--border)",
-                },
-              }}
-            >
+            <Table.Root size="sm" bg="var(--background)" color="var(--foreground)" borderColor="var(--border)">
               <Table.Header bg="var(--background)" color="var(--foreground)">
                 <Table.Row>
                   <Table.ColumnHeader bg="var(--background)" color="var(--foreground)" borderColor="var(--border)" fontSize="md" fontWeight="semibold">Name</Table.ColumnHeader>
@@ -83,6 +167,7 @@ const CryptoList = () => {
     const message = error instanceof Error ? error.message : "Unknown error"
     return (
       <Box px={{ base: 4, md: 8 }} py={6} bg="var(--background)" color="var(--foreground)">
+        {Controls}
         <Alert.Root status="error" borderRadius="md">
           <Alert.Indicator />
           <Alert.Content>
@@ -94,10 +179,9 @@ const CryptoList = () => {
     )
   }
 
-  const items = data?.data ?? []
-
   return (
     <Box px={{ base: 4, md: 8 }} py={6} bg="var(--background)" color="var(--foreground)">
+      {Controls}
       {viewStyle === "list" ? (
         <Box borderWidth="1px" borderColor="var(--border)" rounded="lg" boxShadow="sm" overflow="hidden" maxW="720px" mx="auto">
           <Table.Root
@@ -105,13 +189,6 @@ const CryptoList = () => {
             bg="var(--background)"
             color="var(--foreground)"
             borderColor="var(--border)"
-            sx={{
-              "thead, tbody, tr, th, td": {
-                backgroundColor: "var(--background)",
-                color: "var(--foreground)",
-                borderColor: "var(--border)",
-              },
-            }}
           >
             <Table.Header bg="var(--background)" color="var(--foreground)">
               <Table.Row>
@@ -121,7 +198,7 @@ const CryptoList = () => {
               </Table.Row>
             </Table.Header>
             <Table.Body bg="var(--background)" color="var(--foreground)">
-              {items.map((crypto) => {
+              {displayItems.map((crypto) => {
                 const price = crypto.quote?.USD?.price
                 return (
                   <Table.Row key={crypto.id}>
@@ -136,7 +213,7 @@ const CryptoList = () => {
         </Box>
       ) : (
         <SimpleGrid columns={{ base: 1, md: 2 }} gap={6} width="full">
-          {items.map((crypto, i) => {
+          {displayItems.map((crypto, i) => {
             const price = crypto.quote?.USD?.price
             return (
               <Card.Root
