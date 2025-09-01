@@ -22,9 +22,11 @@ export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url)
     const limit = searchParams.get("limit") || "10"
+    const start = searchParams.get("start") || "1"
 
     const params = new URLSearchParams()
     params.set("limit", limit)
+    params.set("start", start)
 
     const url = `https://pro-api.coinmarketcap.com/v1/cryptocurrency/listings/latest?${params.toString()}`
 
