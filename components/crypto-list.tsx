@@ -1,19 +1,14 @@
 import { Alert, Box, Card, Heading, SimpleGrid, Skeleton, Text, Table, Input, InputGroup, SegmentGroup, HStack, IconButton } from "@chakra-ui/react"
-import { useMemo, useState } from "react"
+import { useEffect, useMemo, useState } from "react"
 import { LuSearch, LuArrowLeft, LuArrowRight } from "react-icons/lu"
 import { useCryptoListings, type CryptoListingsResponse, cryptoListingsQueryOptions } from "../hooks/useCryptoListings"
 import { useQueryClient } from "@tanstack/react-query"
 import { useViewStyle } from "../hooks/useViewStyle"
+import { cryptoByIdQueryKey } from "../hooks/useCryptoById"
+import CryptoDetailDialog from "./crypto-detail-dialog"
+import { formatUSD } from "../lib/format"
 
-function formatUSD(value?: number) {
-  if (typeof value !== "number" || Number.isNaN(value)) return "—"
-  return new Intl.NumberFormat("en-US", {
-    style: "currency",
-    currency: "USD",
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  }).format(value)
-}
+ 
 
 type Crypto = CryptoListingsResponse["data"][number]
 
@@ -72,6 +67,23 @@ const CryptoList = () => {
     })
     return sorted
   }, [items, query, sortKey])
+
+  // Seed per-id cache entries so details open instantly without new requests.
+  useEffect(() => {
+    if (!items?.length) return
+    for (const item of items) {
+      if (item?.id != null) {
+        queryClient.setQueryData(cryptoByIdQueryKey(item.id), item)
+      }
+    }
+  }, [items, queryClient])
+
+  const [detailOpen, setDetailOpen] = useState(false)
+  const [selectedId, setSelectedId] = useState<number | null>(null)
+  const openDetails = (id: number) => {
+    setSelectedId(id)
+    setDetailOpen(true)
+  }
 
   const Controls = (
     <HStack
@@ -267,7 +279,21 @@ const CryptoList = () => {
                 {displayItems.map((crypto) => {
                   const price = crypto.quote?.USD?.price
                   return (
-                    <Table.Row key={crypto.id}>
+                    <Table.Row
+                      key={crypto.id}
+                      cursor="pointer"
+                      _hover={{ bg: "color-mix(in srgb, var(--foreground) 6%, transparent)" }}
+                      onClick={() => openDetails(crypto.id)}
+                      role="button"
+                      tabIndex={0}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter" || e.key === " ") {
+                          e.preventDefault()
+                          openDetails(crypto.id)
+                        }
+                      }}
+                      aria-label={`Open details for ${crypto.name}`}
+                    >
                       <Table.Cell bg="var(--background)" color="var(--foreground)" borderColor="var(--border)">{crypto.name}</Table.Cell>
                       <Table.Cell bg="var(--background)" color="var(--foreground)" borderColor="var(--border)">{crypto.symbol}</Table.Cell>
                       <Table.Cell bg="var(--background)" color="var(--foreground)" borderColor="var(--border)" textAlign="end">{formatUSD(price)}</Table.Cell>
@@ -292,6 +318,17 @@ const CryptoList = () => {
                   bg="var(--background)"
                   color="var(--foreground)"
                   justifySelf={{ base: "center", md: i % 2 === 0 ? "end" : "start" }}
+                  role="button"
+                  cursor="pointer"
+                  _hover={{ boxShadow: "md", borderColor: "color-mix(in srgb, var(--foreground) 45%, transparent)" }}
+                  onClick={() => openDetails(crypto.id)}
+                  tabIndex={0}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" || e.key === " ") {
+                      e.preventDefault()
+                      openDetails(crypto.id)
+                    }
+                  }}
                 >
                   <Card.Body>
                     <Heading size="sm" mb={1} color="var(--foreground)">
@@ -313,6 +350,7 @@ const CryptoList = () => {
           <LuArrowRight />
         </IconButton>
       </HStack>
+      <CryptoDetailDialog open={detailOpen} onOpenChange={setDetailOpen} cryptoId={selectedId ?? undefined} />
     </Box>
   )
 }
