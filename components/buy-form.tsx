@@ -74,13 +74,18 @@ export default function BuyForm() {
         borderWidth="1px"
         borderRadius="lg"
         p={4}
-        className="border border-gray-200 dark:border-gray-700 bg-white dark:bg-zinc-900"
-      >
-        <form onSubmit={onSubmit}>
-          <HStack gap={3} justify="center" wrap="wrap">
-          <Text className="text-gray-900 dark:text-gray-100">Buy</Text>
+        borderColor="var(--border)"
+        bg="var(--background)"
+        color="var(--foreground)"
+        w={{ base: "full", md: "fit-content" }}
+        maxW="100%"
+        mx="auto"
+        shadow="sm"
+      >        <form onSubmit={onSubmit}>
+          <HStack gap={3} justify="center" align="center" wrap="wrap">
+          <Text color="var(--foreground)">Buy</Text>
 
-          <Field.Root invalid={hasAmount && !isAmountValid}>
+          <Field.Root invalid={hasAmount && !isAmountValid} w={{ base: "full", md: "200px" }}>
             <InputGroup startElement="$" endElement="USD">
               <Input
                 type="number"
@@ -92,18 +97,24 @@ export default function BuyForm() {
                 value={amount}
                 onChange={(e) => setAmount(e.target.value)}
                 aria-label="USD amount"
+                bg="var(--background)"
+                color="var(--foreground)"
+                borderColor="var(--border)"
               />
             </InputGroup>
             <Field.ErrorText>Enter an amount between 0 and 5000 USD</Field.ErrorText>
           </Field.Root>
 
-          <Text className="text-gray-900 dark:text-gray-100">of</Text>
+          <Text color="var(--foreground)">of</Text>
 
-          <NativeSelect.Root>
+          <NativeSelect.Root w={{ base: "full", md: "240px" }}>
             <NativeSelect.Field
               value={symbol}
               onChange={(e) => setSymbol(e.target.value)}
               aria-label="Select asset"
+              bg="var(--background)"
+              color="var(--foreground)"
+              borderColor="var(--border)"
             >
               {options.length === 0 ? (
                 <option value="">{isLoading ? "Loading…" : "No assets"}</option>
@@ -118,7 +129,14 @@ export default function BuyForm() {
             <NativeSelect.Indicator />
           </NativeSelect.Root>
 
-          <Button type="submit" disabled={!isAmountValid || !symbol || mutation.isPending}>
+          <Button
+            type="submit"
+            disabled={!isAmountValid || !symbol || mutation.isPending}
+            bg="var(--background)"
+            color="var(--foreground)"
+            borderWidth="1px"
+            borderColor="var(--border)"
+          >
             {mutation.isPending ? "Buying…" : "Buy"}
           </Button>
           </HStack>

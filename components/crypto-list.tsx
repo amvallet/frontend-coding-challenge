@@ -17,7 +17,7 @@ const CryptoList = () => {
   if (isLoading) {
     const skeletonCount = 10
     return (
-      <Box px={{ base: 4, md: 8 }} py={6} className="bg-white text-gray-900 dark:bg-neutral-900 dark:text-gray-100">
+      <Box px={{ base: 4, md: 8 }} py={6} bg="var(--background)" color="var(--foreground)">
         <SimpleGrid columns={{ base: 1, md: 2 }} gap={6} width="full">
           {Array.from({ length: skeletonCount }).map((_, i) => (
             <Card.Root
@@ -25,7 +25,11 @@ const CryptoList = () => {
               borderWidth="1px"
               borderRadius="lg"
               boxShadow="sm"
-              className="border border-gray-200 dark:border-gray-700 bg-white dark:bg-zinc-900"
+              borderColor="var(--border)"
+              bg="var(--background)"
+              color="var(--foreground)"
+              justifySelf={{ base: "center", md: i % 2 === 0 ? "end" : "start" }}
+              width="300px"
             >
               <Card.Body>
                 <Skeleton height="24px" mb={2} />
@@ -41,7 +45,7 @@ const CryptoList = () => {
   if (error) {
     const message = error instanceof Error ? error.message : "Unknown error"
     return (
-      <Box px={{ base: 4, md: 8 }} py={6} className="bg-background text-foreground">
+      <Box px={{ base: 4, md: 8 }} py={6} bg="var(--background)" color="var(--foreground)">
         <Alert.Root status="error" borderRadius="md">
           <Alert.Indicator />
           <Alert.Content>
@@ -56,9 +60,9 @@ const CryptoList = () => {
   const items = data?.data ?? []
 
   return (
-    <Box px={{ base: 4, md: 8 }} py={6} className="bg-background text-foreground">
+    <Box px={{ base: 4, md: 8 }} py={6} bg="var(--background)" color="var(--foreground)">
       <SimpleGrid columns={{ base: 1, md: 2 }} gap={6} width="full">
-        {items.map((crypto) => {
+        {items.map((crypto, i) => {
           const price = crypto.quote?.USD?.price
           return (
             <Card.Root
@@ -66,13 +70,17 @@ const CryptoList = () => {
               borderWidth="1px"
               borderRadius="lg"
               boxShadow="sm"
-              className="border border-gray-200 dark:border-gray-700 bg-white dark:bg-zinc-900"
+              width="300px"
+              borderColor="var(--border)"
+              bg="var(--background)"
+              color="var(--foreground)"
+              justifySelf={{ base: "center", md: i % 2 === 0 ? "end" : "start" }}
             >
               <Card.Body>
-                <Heading size="sm" mb={1} className="text-gray-900 dark:text-gray-100">
+                <Heading size="sm" mb={1} color="var(--foreground)">
                   {crypto.name} ({crypto.symbol})
                 </Heading>
-                <Text className="text-gray-700 dark:text-gray-300">Price: {formatUSD(price)}</Text>
+                <Text color="var(--foreground)">Price: {formatUSD(price)}</Text>
               </Card.Body>
             </Card.Root>
           )

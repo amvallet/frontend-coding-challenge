@@ -8,11 +8,11 @@ import BuyForm from "../components/buy-form"
 export default function Home() {
   return (
     <>
-      <Box px={{ base: 4, md: 8 }} py={6} className="bg-white text-gray-900 dark:bg-neutral-900 dark:text-gray-100">
-        <Heading as="h1" size="lg" textAlign="center" mb={1}>
+      <Box px={{ base: 4, md: 8 }} py={6} bg="var(--background)" color="var(--foreground)">
+        <Heading as="h1" size="lg" textAlign="center" mb={1} color="var(--foreground)">
           Crypto prices
         </Heading>
-        <RefreshTimer />
+        <RefreshTimer align="center" />
       </Box>
       <BuyForm />
       <CryptoList />

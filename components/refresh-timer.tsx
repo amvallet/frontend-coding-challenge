@@ -1,8 +1,9 @@
 "use client"
 
 import { useEffect, useMemo, useRef, useState } from "react"
-import { Text } from "@chakra-ui/react"
-import { useQueryClient } from "@tanstack/react-query"
+import { HStack, IconButton, Text } from "@chakra-ui/react"
+import { useIsFetching, useQueryClient } from "@tanstack/react-query"
+import { LuRefreshCw } from "react-icons/lu"
 
 type RefreshTimerProps = {
   limit?: number
@@ -15,6 +16,7 @@ export default function RefreshTimer({ limit = 10, intervalMs = 10_000, align = 
   const queryKey = useMemo(() => ["crypto", "listings", { limit }], [limit])
 
   const [seconds, setSeconds] = useState<number | null>(null)
+  const [locked, setLocked] = useState(false)
 
   // Track which fetch cycle we've already invalidated for, to avoid repeated invalidations while at 0s.
   const lastUpdatedRef = useRef<number | null>(null)
@@ -65,12 +67,36 @@ export default function RefreshTimer({ limit = 10, intervalMs = 10_000, align = 
     }
   }, [queryClient, queryKey, intervalMs])
 
-  const alignProps =
-    align === "left" ? { textAlign: "left" as const } : align === "right" ? { textAlign: "right" as const } : { textAlign: "center" as const }
+  const justify = align === "left" ? "flex-start" : align === "right" ? "flex-end" : "center"
+  const isRefreshing = useIsFetching({ queryKey: ["crypto", "listings"] }) > 0
+
+  const handleRefresh = async () => {
+    if (locked) return
+    setLocked(true)
+    try {
+      // Manually refetch active queries and await completion to lock the button until response
+      await queryClient.refetchQueries({ queryKey: ["crypto", "listings"] })
+    } finally {
+      setLocked(false)
+    }
+  }
 
   return (
-    <Text {...alignProps} color="gray.600" className="dark:text-gray-300">
-      Next update in: {seconds == null ? "—" : `${seconds}s`}
-    </Text>
+    <HStack justify={justify} gap={2}>
+      <Text color="var(--foreground)" opacity={0.8}>
+        Next update in: {seconds == null ? "—" : `${seconds}s`}
+      </Text>
+      <IconButton
+        aria-label="Refresh now"
+        size="sm"
+        variant="ghost"
+        onClick={handleRefresh}
+        color="var(--foreground)"
+        disabled={locked || isRefreshing}
+        aria-busy={isRefreshing}
+      >
+        <LuRefreshCw className={isRefreshing ? "ui-spin" : undefined} />
+      </IconButton>
+    </HStack>
   )
 }
