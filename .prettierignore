@@ -1,0 +1,21 @@
+# Dependencies and caches
+node_modules
+.pnp
+.pnpm-store
+
+# Build outputs
+.next
+out
+dist
+build
+coverage
+.turbo
+.vercel
+
+# Locks & misc
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
+
+# Env & misc
+.env*

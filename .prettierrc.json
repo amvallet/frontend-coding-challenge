@@ -1,0 +1,10 @@
+{
+  "$schema": "https://json.schemastore.org/prettierrc",
+  "semi": false,
+  "overrides": [
+    {
+      "files": ["**/*.ts", "**/*.tsx"],
+      "options": { "parser": "typescript" }
+    }
+  ]
+}
