@@ -11,6 +11,7 @@ import {
 } from "@chakra-ui/react"
 import { LuSettings } from "react-icons/lu"
 import { useUiTheme, type UiTheme } from "../hooks/useUiTheme"
+import { useViewStyle, type ViewStyle } from "../hooks/useViewStyle"
 
 function ThemeControl() {
   const { theme, setTheme } = useUiTheme()
@@ -56,6 +57,50 @@ function ThemeControl() {
   )
 }
 
+function ViewStyleControl() {
+  const { viewStyle, setViewStyle } = useViewStyle()
+  const value = viewStyle
+
+  return (
+    <HStack gap={2} align="flex-start" alignItems="center">
+      <Text fontSize="sm" color="var(--foreground)" opacity={0.8}>
+        View Style
+      </Text>
+      <SegmentGroup.Root
+        size="sm"
+        value={value}
+        onValueChange={({ value }) => setViewStyle((value as ViewStyle) ?? "grid")}
+        bg="var(--background)"
+        color="var(--foreground)"
+        borderWidth="1px"
+        borderColor="var(--border)"
+        rounded="md"
+      >
+        <SegmentGroup.Item
+          value="grid"
+          px="3"
+          py="1.5"
+          color="var(--foreground)"
+          _checked={{ color: "var(--background)", bg: "var(--foreground)" }}
+        >
+          <SegmentGroup.ItemText color="currentColor">Grid</SegmentGroup.ItemText>
+          <SegmentGroup.ItemHiddenInput />
+        </SegmentGroup.Item>
+        <SegmentGroup.Item
+          value="list"
+          px="3"
+          py="1.5"
+          color="var(--foreground)"
+          _checked={{ color: "var(--background)", bg: "var(--foreground)" }}
+        >
+          <SegmentGroup.ItemText color="currentColor">List</SegmentGroup.ItemText>
+          <SegmentGroup.ItemHiddenInput />
+        </SegmentGroup.Item>
+      </SegmentGroup.Root>
+    </HStack>
+  )
+}
+
 export default function SettingsPopover() {
   return (
     <Popover.Root>
@@ -87,6 +132,9 @@ export default function SettingsPopover() {
             <Popover.Body>
               <Box mt={3}>
                 <ThemeControl />
+              </Box>
+              <Box mt={3}>
+                <ViewStyleControl />
               </Box>
             </Popover.Body>
           </Popover.Content>
