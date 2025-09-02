@@ -26,9 +26,10 @@ export default async function RootLayout({
 }>) {
   const cookieStore = await cookies()
   const cookieTheme = cookieStore.get("ui-theme")?.value
-  const ssrTheme = cookieTheme === "dark" ? "dark" : "light"
+  const theme = cookieTheme === "dark" ? "dark" : "light"
+  
   return (
-    <html lang="en" data-ui-theme={ssrTheme} suppressHydrationWarning>
+    <html lang="en" data-ui-theme={theme} suppressHydrationWarning>
       <head></head>
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
         <Providers>{children}</Providers>

@@ -6,19 +6,17 @@ import { useIsFetching, useQueryClient } from "@tanstack/react-query"
 import { LuRefreshCw } from "react-icons/lu"
 
 type RefreshTimerProps = {
-  intervalMs?: number // default 10_000
+  intervalMs?: number
   align?: "left" | "center" | "right"
 }
 
 export default function RefreshTimer({ intervalMs = 10_000, align = "center" }: RefreshTimerProps) {
   const queryClient = useQueryClient()
-  // Track listings by prefix so pagination (start) doesn't break the timer.
   const listingsKeyPrefix = useMemo(() => ["crypto", "listings"] as const, [])
 
   const [seconds, setSeconds] = useState<number | null>(null)
   const [locked, setLocked] = useState(false)
 
-  // Track which fetch cycle we've already invalidated for, to avoid repeated invalidations while at 0s.
   const lastUpdatedRef = useRef<number | null>(null)
   const invalidatedForUpdatedAtRef = useRef<number | null>(null)
 
@@ -27,13 +25,11 @@ export default function RefreshTimer({ intervalMs = 10_000, align = "center" }: 
     let interval: ReturnType<typeof setInterval> | null = null
 
     const computeAndUpdate = () => {
-      // Consider ALL listings queries (different pages) and use the most recent update time.
       const entries = queryClient.getQueriesData<unknown>({ queryKey: listingsKeyPrefix, type: 'active' })
       const updatedAts = entries.map(([key]) => queryClient.getQueryState(key)?.dataUpdatedAt ?? 0)
       const latestUpdatedAt = updatedAts.length ? Math.max(...updatedAts) : 0
       const hasData = latestUpdatedAt > 0
 
-      // When dataUpdatedAt changes, clear the invalidation guard so the next cycle can invalidate again.
       if (latestUpdatedAt !== lastUpdatedRef.current) {
         lastUpdatedRef.current = latestUpdatedAt
         invalidatedForUpdatedAtRef.current = null
@@ -50,16 +46,13 @@ export default function RefreshTimer({ intervalMs = 10_000, align = "center" }: 
       setSeconds(nextSeconds)
 
       if (nextSeconds === 0 && invalidatedForUpdatedAtRef.current !== latestUpdatedAt) {
-        // Invalidate all related queries to trigger refetch.
         queryClient.invalidateQueries({ queryKey: listingsKeyPrefix, type: 'active' })
         invalidatedForUpdatedAtRef.current = latestUpdatedAt
       }
     }
 
-    // Initial run and 1s ticking.
     computeAndUpdate()
     interval = setInterval(() => {
-      // Use rAF inside interval to keep UI smooth.
       raf = window.requestAnimationFrame(computeAndUpdate)
     }, 1000)
 
@@ -76,7 +69,6 @@ export default function RefreshTimer({ intervalMs = 10_000, align = "center" }: 
     if (locked) return
     setLocked(true)
     try {
-      // Manually refetch only active queries and await completion
       await queryClient.refetchQueries({ queryKey: listingsKeyPrefix, type: 'active' })
     } finally {
       setLocked(false)
