@@ -2,9 +2,9 @@
 
 import { Box, Heading } from "@chakra-ui/react"
 import RefreshTimer from "../components/refresh-timer"
-import CryptoList from "../components/crypto-list"
+import CryptoList from "../components/crypto-list/index"
 import BuyForm from "../components/buy-form"
-import SettingsPopover from "../components/settings-popover"
+import SettingsPopover from "../components/settings/settings-popover"
 
 export default function Home() {
   return (

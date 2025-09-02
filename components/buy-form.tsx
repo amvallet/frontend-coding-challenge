@@ -81,7 +81,8 @@ export default function BuyForm() {
         maxW="100%"
         mx="auto"
         shadow="sm"
-      >        <form onSubmit={onSubmit}>
+      >        
+        <form onSubmit={onSubmit}>
           <HStack gap={3} justify="center" align="center" wrap="wrap">
           <Text color="var(--foreground)">Buy</Text>
 
