@@ -18,8 +18,8 @@ function ThemeControl() {
   const value = theme
 
   return (
-    <HStack gap={2} align="flex-start" alignItems="center">
-      <Text fontSize="sm" color="var(--foreground)" opacity={0.8}>
+    <HStack gap={4} align="center">
+      <Text w="120px" textAlign="right" fontSize="sm" color="var(--foreground)" opacity={0.8}>
         Theme
       </Text>
       <SegmentGroup.Root
@@ -62,8 +62,8 @@ function ViewStyleControl() {
   const value = viewStyle
 
   return (
-    <HStack gap={2} align="flex-start" alignItems="center">
-      <Text fontSize="sm" color="var(--foreground)" opacity={0.8}>
+    <HStack gap={4} align="center">
+      <Text w="120px" textAlign="right" fontSize="sm" color="var(--foreground)" opacity={0.8}>
         View Style
       </Text>
       <SegmentGroup.Root

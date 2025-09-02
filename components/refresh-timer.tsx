@@ -6,14 +6,14 @@ import { useIsFetching, useQueryClient } from "@tanstack/react-query"
 import { LuRefreshCw } from "react-icons/lu"
 
 type RefreshTimerProps = {
-  limit?: number
   intervalMs?: number // default 10_000
   align?: "left" | "center" | "right"
 }
 
-export default function RefreshTimer({ limit = 10, intervalMs = 10_000, align = "center" }: RefreshTimerProps) {
+export default function RefreshTimer({ intervalMs = 10_000, align = "center" }: RefreshTimerProps) {
   const queryClient = useQueryClient()
-  const queryKey = useMemo(() => ["crypto", "listings", { limit }], [limit])
+  // Track listings by prefix so pagination (start) doesn't break the timer.
+  const listingsKeyPrefix = useMemo(() => ["crypto", "listings"] as const, [])
 
   const [seconds, setSeconds] = useState<number | null>(null)
   const [locked, setLocked] = useState(false)
@@ -27,13 +27,15 @@ export default function RefreshTimer({ limit = 10, intervalMs = 10_000, align = 
     let interval: ReturnType<typeof setInterval> | null = null
 
     const computeAndUpdate = () => {
-      const state = queryClient.getQueryState(queryKey)
-      const updatedAt = state?.dataUpdatedAt ?? 0
-      const hasData = Boolean(updatedAt)
+      // Consider ALL listings queries (different pages) and use the most recent update time.
+      const entries = queryClient.getQueriesData<unknown>({ queryKey: listingsKeyPrefix, type: 'active' })
+      const updatedAts = entries.map(([key]) => queryClient.getQueryState(key)?.dataUpdatedAt ?? 0)
+      const latestUpdatedAt = updatedAts.length ? Math.max(...updatedAts) : 0
+      const hasData = latestUpdatedAt > 0
 
       // When dataUpdatedAt changes, clear the invalidation guard so the next cycle can invalidate again.
-      if (updatedAt !== lastUpdatedRef.current) {
-        lastUpdatedRef.current = updatedAt
+      if (latestUpdatedAt !== lastUpdatedRef.current) {
+        lastUpdatedRef.current = latestUpdatedAt
         invalidatedForUpdatedAtRef.current = null
       }
 
@@ -42,15 +44,15 @@ export default function RefreshTimer({ limit = 10, intervalMs = 10_000, align = 
         return
       }
 
-      const nextAt = updatedAt + intervalMs
+      const nextAt = latestUpdatedAt + intervalMs
       const remainingMs = Math.max(nextAt - Date.now(), 0)
       const nextSeconds = Math.ceil(remainingMs / 1000)
       setSeconds(nextSeconds)
 
-      if (nextSeconds === 0 && invalidatedForUpdatedAtRef.current !== updatedAt) {
+      if (nextSeconds === 0 && invalidatedForUpdatedAtRef.current !== latestUpdatedAt) {
         // Invalidate all related queries to trigger refetch.
-        queryClient.invalidateQueries({ queryKey: ["crypto", "listings"] })
-        invalidatedForUpdatedAtRef.current = updatedAt
+        queryClient.invalidateQueries({ queryKey: listingsKeyPrefix, type: 'active' })
+        invalidatedForUpdatedAtRef.current = latestUpdatedAt
       }
     }
 
@@ -65,17 +67,17 @@ export default function RefreshTimer({ limit = 10, intervalMs = 10_000, align = 
       if (interval) clearInterval(interval)
       if (raf) cancelAnimationFrame(raf)
     }
-  }, [queryClient, queryKey, intervalMs])
+  }, [queryClient, listingsKeyPrefix, intervalMs])
 
   const justify = align === "left" ? "flex-start" : align === "right" ? "flex-end" : "center"
-  const isRefreshing = useIsFetching({ queryKey: ["crypto", "listings"] }) > 0
+  const isRefreshing = useIsFetching({ queryKey: listingsKeyPrefix, type: 'active' }) > 0
 
   const handleRefresh = async () => {
     if (locked) return
     setLocked(true)
     try {
-      // Manually refetch active queries and await completion to lock the button until response
-      await queryClient.refetchQueries({ queryKey: ["crypto", "listings"] })
+      // Manually refetch only active queries and await completion
+      await queryClient.refetchQueries({ queryKey: listingsKeyPrefix, type: 'active' })
     } finally {
       setLocked(false)
     }
